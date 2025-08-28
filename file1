@@ -40,7 +40,7 @@ public void shortest(int s, int A[][]) {
  }
  }
  public static void main(String[] args) {
- int n,
+ int n,s;
 Scanner sc = new Scanner(System.in);
  System.out.println("Enter the number of vertices:");
  n = sc.nextInt();
@@ -61,5 +61,149 @@ Scanner sc = new Scanner(System.in);
  BellmanFord b = new BellmanFord(n);
  b.shortest(s, A);
  sc.close();
+ }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.net.Socket;
+import java.util.Scanner;
+class Client {
+ public static void main(String args[]) throws Exception {
+ String address = "";
+ Scanner sc = new Scanner(System.in);
+ System.out.println("Enter Server Address: ");
+ address = sc.nextLine();
+ // Create the socket on port 5000
+ Socket s = new Socket(address, 5000);
+ DataInputStream din = new DataInputStream(s.getInputStream());
+ DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+ BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+ System.out.println("Send 'Get' to start...");
+ String str = "", filename = "";
+ try {
+ // Wait until user types "start"
+ while (!str.equalsIgnoreCase("start")) {
+ str = br.readLine();
+ }
+ dout.writeUTF(str);
+ dout.flush();
+ filename = din.readUTF();
+ System.out.println("Receiving file: " + filename);
+ filename = "client_" + filename; // Rename file
+ System.out.println("Saving as file: " + filename);
+ long fileSize = Long.parseLong(din.readUTF());
+ System.out.println("File Size: " + (fileSize / (1024 * 1024)) + " MB");
+ byte[] buffer = new byte[4096];
+ System.out.println("Receiving file...");
+ FileOutputStream fos = new FileOutputStream(new File(filename));
+long totalRead = 0;
+ int bytesRead;
+ while (totalRead < fileSize) {
+ bytesRead = din.read(buffer, 0, (int) Math.min(buffer.length, fileSize - totalRead));
+ if (bytesRead == -1) break;
+ fos.write(buffer, 0, bytesRead);
+ totalRead += bytesRead;
+ }
+ System.out.println("File download completed.");
+ fos.close();
+ dout.close();
+ din.close();
+ s.close();
+ } catch (EOFException e) {
+ System.out.println("EOF reached.");
+ } catch (Exception e) {
+ e.printStackTrace();
+ }
+ }
+}
+
+
+
+
+
+
+
+
+//Server.java
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Scanner;
+class Server {
+ public static void main(String args[]) throws Exception {
+ String filename;
+ System.out.println("Enter File Name: ");
+ Scanner sc = new Scanner(System.in);
+ filename = sc.nextLine();
+ sc.close();
+ File file = new File(filename);
+ if (!file.exists()) {
+ System.out.println("File does not exist. Exiting.");
+ return;
+ }
+ ServerSocket ss = new ServerSocket(5000);
+ System.out.println("Server started. Waiting for request...");
+ while (true) {
+ Socket s = ss.accept();
+ System.out.println("Connected with " + s.getInetAddress().toString());
+DataInputStream din = new DataInputStream(s.getInputStream());
+ DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+ try {
+ String str = din.readUTF();
+ if (str.equalsIgnoreCase("start")) {
+ System.out.println("Client requested file.");
+ // Send file name
+ dout.writeUTF(file.getName());
+ dout.flush();
+ // Send file size
+ long fileSize = file.length();
+ dout.writeUTF(Long.toString(fileSize));
+ dout.flush();
+ System.out.println("Sending file: " + file.getName());
+ System.out.println("File size: " + fileSize + " bytes");
+ FileInputStream fin = new FileInputStream(file);
+ byte[] buffer = new byte[4096];
+ long totalRead = 0;
+ int read;
+ while ((read = fin.read(buffer)) != -1) {
+ dout.write(buffer, 0, read);
+ dout.flush();
+ totalRead += read;
+ }
+ fin.close();
+ System.out.println("File sent successfully.");
+ } else if (str.equalsIgnoreCase("stop")) {
+ System.out.println("Client sent stop request.");
+ }
+ } catch (Exception e) {
+ e.printStackTrace();
+ System.out.println("An error occurred during file transfer.");
+ }
+ din.close();
+ dout.close();
+ s.close();
+ System.out.println("Connection closed. Waiting for new client...");
+ }
  }
 }
