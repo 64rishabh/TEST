@@ -1,36 +1,65 @@
-import wikipedia  # Import the Wikipedia library
-
-def search_and_provide_info(query):
-    try:
-        # Use the Wikipedia library to search for the query
-        results = wikipedia.search(query)
-        if not results:
-            return "No relevant information found."
-
-        # Select the first result and fetch its summary
-        page_summary = wikipedia.summary(results[0], sentences=2)
-        return page_summary
-
-    except wikipedia.exceptions.DisambiguationError as e:
-        # If there are multiple results, provide suggestions
-        return f"Multiple results found. Try to be more specific: {', '.join(e.options[:5])}"
-
-    except wikipedia.exceptions.PageError:
-        return "No information found for the given query."
-
-    except Exception as e:
-        return f"An error occurred: {e}"
-
-def main():
-    while True:
-        # Take user input for the search query
-        query = input("Enter your search query (or 'quit' to exit): ")
-        if query.lower() == 'quit':
-            print("Exiting...")
-            break
-        # Call the function and print the result
-        print(search_and_provide_info(query))
-
-# Run the main function
-if __name__ == "__main__":
-    main()
+import java.util.Scanner;
+ public class BellmanFord {
+ private int D[];
+ private int n;
+ public static final int MAX_VALUE = 999;
+ public BellmanFord(int n) {
+ this.n = n;
+ D = new int[n + 1];
+ }
+public void shortest(int s, int A[][]) {
+ for (int i = 1; i <= n; i++) {
+ D[i] = MAX_VALUE;
+ }
+ D[s] = 0;
+ for (int k = 1; k <= n - 1; k++) {
+ for (int i = 1; i <= n; i++) {
+ for (int j = 1; j <= n; j++) {
+ if (A[i][j] != MAX_VALUE) {
+ if (D[i] != MAX_VALUE && D[j] > D[i] + A[i][j]) {
+ D[j] = D[i] + A[i][j];
+ }
+ }
+ }
+ }
+ }
+ // Check for negative weight cycles
+ for (int i = 1; i <= n; i++) {
+ for (int j = 1; j <= n; j++) {
+ if (A[i][j] != MAX_VALUE) {
+ if (D[i] != MAX_VALUE && D[j] > D[i] + A[i][j]) {
+ System.out.println("The Graph contains a negative weight cycle");
+ return;
+ }
+ }
+ }
+ }
+ // Print shortest distances
+ for (int i = 1; i <= n; i++) {
+ System.out.println("Distance from source " + s + " to vertex " + i + " is " + D[i]);
+ }
+ }
+ public static void main(String[] args) {
+ int n,
+Scanner sc = new Scanner(System.in);
+ System.out.println("Enter the number of vertices:");
+ n = sc.nextInt();
+ int A[][] = new int[n + 1][n + 1];
+ System.out.println("Enter the weighted adjacency matrix:");
+ for (int i = 1; i <= n; i++) {
+ for (int j = 1; j <= n; j++) {
+ A[i][j] = sc.nextInt();
+ if (i == j) {
+ A[i][j] = 0;
+ } else if (A[i][j] == 0) {
+ A[i][j] = MAX_VALUE;
+ }
+ }
+ }
+ System.out.println("Enter the source vertex:");
+ s = sc.nextInt();
+ BellmanFord b = new BellmanFord(n);
+ b.shortest(s, A);
+ sc.close();
+ }
+}
